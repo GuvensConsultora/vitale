@@ -1,0 +1,33 @@
+<?php
+echo "$usuario";
+
+if ($usuario =="")
+{
+?>
+<HTML>
+<HEAD>
+<TITLE>AREA SANITARIA SAN RAFAEL SISTEMA DE AUDITORIA EN CAPTACIÓN DE AFILIADOS</TITLE>
+</HEAD>
+<body>
+<br>
+<div align=center><h1>Ingresar los datos correspondientes</h1></div>
+</body>
+</HTML>
+<?
+}
+else
+{
+?>
+<HTML>
+<HEAD>
+<TITLE>AREA SANITARIA SAN RAFAEL SISTEMA DE AUDITORIA EN CAPTACIÓN DE AFILIADOS</TITLE>
+</HEAD>
+<FRAMESET  rows="*,5%" cols="15%,*">
+       <FRAME src="menu0.php">
+       <FRAME src="cuerpo.html" name="cuerpo">
+       <FRAME src="" name="ayuda">
+       <FRAME src="ayudas.php" name="ayuda">
+</FRAMESET>
+</HTML>
+<?
+?>

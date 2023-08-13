@@ -1,0 +1,151 @@
+<?php
+
+/////////////////// TRAIGO TODAS LAS VARIABLES NECESARIAS ////////////////////////
+        $apellido=$_POST['apellido'];
+        $sex=$_POST['sex'];
+        $nacimiento=$_POST['nacimiento'];
+        $cuilb=$_POST['cuilb'];
+        $cuilt=$_POST['cuilt'];
+        $codos=$_POST['codos'];
+        $codosreg=$_POST['codosreg'];
+        $prest=$_POST['prest'];
+        $carnet=$_POST['carnet'];
+        $cie=$_POST['cie'];
+        $cs = $_POST['cs'];
+        $pmes=$_POST['pmes'];
+        $pano=$_POST['pano'];
+        $doc=$_POST['doc'];
+        $dia=$_POST['dia'];
+        $mes=$_POST['mes'];
+        $ano=$_POST['ano'];
+        $fecha=$_POST['fecha'];
+        $linea_anexo=$_POST['id_anexo'];
+        $id_persona=$_POST['id_persona'];
+        $id_vinculo_os=$_POST['id_vinculo_os'];
+        $operacion = $_POST['operacion'];
+        $confirma = $_POST['confirma'];
+        $host        = "host = 172.17.0.2";
+        $port        = "port = 5432";
+        $dbname      = "dbname = sistema";
+        $credentials = "user = horacio password=123456";
+        $conn = pg_connect("$host $port $dbname $credentials");
+
+
+/////////////// BORRO UNA LINEA DEL LISTADO //////////////////////
+
+if ($linea_anexo == !""):
+    $sql_borrar_linea ="delete from areasanrafael.anexo where idmov='$linea_anexo'";
+$borrar_linea=pg_query($conn,$sql_borrar_linea);
+endif;
+
+////////////// ACTUALIZO DATOS PERSONALES OBRAS SOCIALES Y ANEXOS.////////////
+if ($confirma !=""):
+//    echo "Carga todo<br>";
+//    echo "Id_persona: ".$id_persona."<br>";
+    $sql="update personas.fisica set nombre ='$apellido',documento='$doc',sexo='$sex',cuil='$cuilb',fnacimiento='$nacimiento' where id='$id_persona'";
+    $resultado=pg_query($conn,$sql);
+
+//    echo "Id vinculo obra social: ".$id_vinculo_os."<br>";
+    $sql1="update sss.vinculo set cuilt ='$cuilt',ncarnet='$carnet' where id='$id_vinculo_os'";
+   $resultado1=pg_query($conn,$sql1);
+    echo "Fecha: ".$fecha."<br>";
+    //echo "Documento: ".$doc."<br>";
+    //echo "Prestacion: ".$prest."<br>";
+    //echo "Centro de Salud: ".$cs."<br>";
+    //echo "Nro O social procesada: ".$codos." vs obra social reg ".$codosreg. "<br>";
+    //echo "Periodo Mes: ".$pmes. " Periodo año:  ".$pano."<br>";
+    //echo "Carnet registrado: ".$carnet."<br>";
+    //echo "Diagnostico: ".$cie."<br>";
+    $sql2="select * from nomencladores.arapres where codigo='$prest'";
+    $resultado2=pg_query($conn,$sql2);
+    $row = pg_fetch_row($resultado2);
+    //echo "id:".$row[0]."<br>";
+    //echo "cod:".$row[1]."<br>";
+    //echo "monto:".$row[2]."<br>";
+    //echo "monto mayo".$row[7]."<br>";
+    //echo "monto octubre".$row[8]."<br>";
+    //echo $row[3];
+
+////////////// DECIDO QUE IMPORTE VOY A INCLUIR EN FUNCION DE LA FECHA .////////////
+
+if ($fecha < "2022-05-01"):
+   echo "monto:".$row[2]."<br>";
+   $monto = $row[2];
+elseif ($fecha >= "2022-05-01" && $fecha < "2022-10-01"):
+   echo "monto mayo".$row[7]."<br>";
+   $monto = $row[7];
+elseif ($fecha >= "2022-10-01"):
+   echo "monto octubre".$row[8]."<br>";
+   $monto = $row[8];
+endif;
+
+
+
+    $sql3="INSERT INTO areasanrafael.anexo(fecha,doc,idpres,idcentro,idos,periododmes,importe,carnet,ccie,periodoano) values ('$fecha','$doc','$prest','$cs','$codos',$pmes,$monto,'$carnet','$cie',$pano)";
+    $inserto_prestacion=pg_query($conn,$sql3);
+endif;
+
+        ?>
+    <html>
+    <title>Carga de anexos al listado </title>
+ <?php
+	echo "<table border=1 align=center>";
+    echo "<div align='center'><H4>Formulario cargador de listados </h4></div>";
+   
+/// --------------------------------------------------------------------------------------------------
+///                          Formulario para comenzar carga de prestación
+/// --------------------------------------------------------------------------------------------------
+?><form name="busca1" method="POST" action="actualizadatos2021.php">
+    <div align="center"><h3>Ingresar D.N.I. para comezar carga de prestación</h3></div>
+    <p align="center"><u><i><font size="5">Nro de documento</font></i></u>
+        <input type="hidden" name="codos" value=<?php echo $codos;?>>
+        <input type="hidden" name="cs" value=<?php echo $cs;?>>
+        <input type="hidden" name="pmes" value=<?php echo $pmes;?>>
+        <input type="hidden" name="pano" value=<?php echo $pano;?>>
+
+    <font size="5"><span style="text-transform: uppercase"><input type="text" name="doc" size="10" style="font-size: 24 pt; text-transform: uppercase; text-align: center" tabindex="0" maxlength="8" ></span></font></p>
+    <p align="center"><input type="submit" value="Enviar" name="B1"><input type="reset" value="Restablecer" name="B2"></p>
+</form>
+<?php
+/// ------------------Termino Formulario Carga Prestación-------------------------------------------
+
+/// -----------------------------------------------------------------------------------------------------
+/// -------------------------------COMIENZA LISTADO DE VERIFICACIÒN DE DATOS. --------------------------
+//  Verifico las variables   echo $codos." / ".$cs." / ".$pmes." / ".$pano."<br>";        
+$sql2="select idmov, fecha, doc, idpres,  idos,  periododmes,  periodoano,  to_char( importe, '$99999D99'), carnet, idcentro, ccie
+    from areasanrafael.anexo 
+    where idos='$codos' and idcentro='$cs' and periododmes ='$pmes' and periodoano = '$pano'
+    order by idmov DESC LIMIT 23 ";
+$resultado2=pg_query($conn,$sql2);
+  echo "<table WIDTH=100% BORDER=1 BORDERCOLOR='#000001'>";
+  echo "<th>Id </th>";
+  echo "<th>Cs </th>";
+  echo "<th>Fecha </th>";
+  echo "<th>Nro Carnet</th>";
+  echo "<th>Doc. </th>";
+  echo "<th>C. Prest </th>";
+  echo "<th>Cie 10 </th>";
+  echo "<th>Importe </th>";
+while ($row2 = pg_fetch_row($resultado2)) 
+{
+  echo "<FORM name='borrar' action='generalista21.php' method='POST'>";
+  echo "<tr>";
+  echo "<td width='150'>
+          <input size=6 name=id_anexo type=text value='$row2[0]'readonly=True>
+          <input size=5 name=codos type=hidden value='$codos' readonly=true>
+          <input size=2 name=pmes type=hidden value='$pmes' readonly=True>
+          <input size=4 name=pano type=hidden value='$pano' readonly=True>
+          <INPUT type='submit' value='Borrar' name='Borrar'></td>";
+  echo "<td><input size=4 name=cs type=text value='$row2[9]'readonly=True> </td>";
+  echo "<td>$row2[1] </td>";
+  echo "<td>$row2[8]</td>";
+  echo "<td>$row2[2]</td>";
+  echo "<td>$row2[3]</td>";
+  echo "<td>$row2[10]</td>";
+  echo "<td><p ALIGN=RIGHT>$row2[7]</p></td></tr>";
+  echo "</FORM>";
+}
+  echo "</form></table>";
+?>
+</body>
+</html>
